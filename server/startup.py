@@ -70,7 +70,11 @@ OPENAPI_TAGS = [
 async def application_lifespan(application: FastAPI):
     """Run startup tasks before the application begins serving requests."""
     logger.info("Starting Smart Retail Analytics Engine...")
-    setup_mongo_indexes()
+    # Run MongoDB setup in background — don't block startup
+    try:
+        setup_mongo_indexes()
+    except Exception as e:
+        logger.warning("MongoDB setup skipped (will retry on first use): %s", e)
     logger.info("Startup complete.")
     yield
     logger.info("Shutting down Smart Retail Analytics Engine.")
