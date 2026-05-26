@@ -376,4 +376,5 @@ pytest tests/ -v
 #   C G _ s m a r t r e t a i l s _ a s s i s t a n t _ c a p s t o n e  
  #   C G _ s m a r t r e t a i l s _ a s s i s t a n t _ c a p s t o n e  
  #   C G _ s m a r t r e t a i l s _ a s s i s t a n t _ c a p s t o n e  
+ #   C G _ s m a r t r e t a i l s _ a s s i s t a n t _ c a p s t o n e  
  
