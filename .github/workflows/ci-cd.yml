@@ -1,0 +1,187 @@
+name: CI/CD — Smart Retail Analytics Engine
+# Capstone Project — Left Shift Program 2026 (Data & AI T5)
+# Pipeline: Test → Build Docker → Push to GHCR → Deploy to Azure Web App
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.11"
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/retail-engine
+
+jobs:
+  # ════════════════════════════════════════════════════════════
+  # JOB 1 — Run Tests
+  # ════════════════════════════════════════════════════════════
+  test:
+    name: Run Tests (pytest)
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval \"db.adminCommand('ping')\""
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate sample data
+        run: python scripts/generate_sample_data.py
+
+      - name: Run pytest (65 tests)
+        env:
+          MONGO_CONNECTION: mongodb://localhost:27017
+          MONGO_DB_NAME: smart_retail_test
+          USE_AZURE_OPENAI: "false"
+          USE_AZURE_TEXT_ANALYTICS: "false"
+          USE_AZURE_SEARCH: "false"
+          USE_AZURE_ML: "false"
+          USE_AZURE_KEYVAULT: "false"
+        run: pytest tests/ -v --tb=short
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: .pytest_cache/
+
+  # ════════════════════════════════════════════════════════════
+  # JOB 2 — Build & Push Docker Image
+  # ════════════════════════════════════════════════════════════
+  build:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest
+            type=ref,event=branch
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ════════════════════════════════════════════════════════════
+  # JOB 3 — Deploy to Azure Web App
+  # ════════════════════════════════════════════════════════════
+  deploy:
+    name: Deploy to Azure Web App
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    environment:
+      name: production
+      url: https://${{ secrets.AZURE_WEBAPP_NAME }}.azurewebsites.net
+
+    steps:
+      - name: Deploy to Azure Web App (Container)
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Verify deployment health
+        run: |
+          echo "Waiting 30s for app to start..."
+          sleep 30
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            https://${{ secrets.AZURE_WEBAPP_NAME }}.azurewebsites.net/ping)
+          echo "Health check status: $STATUS"
+          if [ "$STATUS" = "200" ]; then
+            echo "Deployment successful!"
+          else
+            echo "Warning: App returned $STATUS — may still be starting."
+          fi
+
+  # ════════════════════════════════════════════════════════════
+  # JOB 4 — Run Data Pipeline (on schedule)
+  # ════════════════════════════════════════════════════════════
+  pipeline:
+    name: Run Data Engineering Pipeline
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate sample data
+        run: python scripts/generate_sample_data.py
+
+      - name: Run data engineering pipeline
+        run: python data_engineering/retail_pipeline.py
+
+      - name: Upload pipeline outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-outputs
+          path: data_engineering/output/
+
+# ── Scheduled trigger for daily pipeline ──────────────────────
+# Uncomment to enable daily data pipeline run at 2 AM UTC
+# on:
+#   schedule:
+#     - cron: '0 2 * * *'

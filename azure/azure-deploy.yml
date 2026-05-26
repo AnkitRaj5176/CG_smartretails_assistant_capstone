@@ -1,0 +1,169 @@
+# ===============================================================
+# Azure Web App Deployment Configuration
+# Smart Retail Analytics Engine — Capstone Project 2026
+# ===============================================================
+
+# ── App Service Plan ───────────────────────────────────────────
+appServicePlan:
+  name: retail-engine-plan
+  sku: B2                    # Basic tier — upgrade to P2v3 for production
+  os: Linux
+  location: eastus
+
+# ── Azure Web App (Container) ──────────────────────────────────
+webApp:
+  name: smart-retail-engine  # Must be globally unique on azurewebsites.net
+  resourceGroup: rg-retail-engine
+  location: eastus
+  runtime: DOCKER
+  containerImage: ghcr.io/<YOUR_GITHUB_ORG>/retail-engine:latest
+  httpsOnly: true
+
+  appSettings:
+    # Port
+    - name: WEBSITES_PORT
+      value: "8000"
+
+    # MongoDB (from Key Vault)
+    - name: MONGO_CONNECTION
+      value: "@Microsoft.KeyVault(VaultName=retail-engine-kv;SecretName=MongoConnection)"
+    - name: MONGO_DB_NAME
+      value: smart_retail
+
+    # Azure OpenAI (from Key Vault)
+    - name: USE_AZURE_OPENAI
+      value: "true"
+    - name: AZURE_OPENAI_KEY
+      value: "@Microsoft.KeyVault(VaultName=retail-engine-kv;SecretName=AzureOpenAIKey)"
+    - name: AZURE_OPENAI_ENDPOINT
+      value: "@Microsoft.KeyVault(VaultName=retail-engine-kv;SecretName=AzureOpenAIEndpoint)"
+    - name: AZURE_OPENAI_DEPLOYMENT
+      value: gpt-4o
+    - name: AZURE_OPENAI_API_VERSION
+      value: "2024-02-01"
+
+    # Azure Text Analytics (from Key Vault)
+    - name: USE_AZURE_TEXT_ANALYTICS
+      value: "true"
+    - name: AZURE_TEXT_ANALYTICS_KEY
+      value: "@Microsoft.KeyVault(VaultName=retail-engine-kv;SecretName=TextAnalyticsKey)"
+    - name: AZURE_TEXT_ANALYTICS_ENDPOINT
+      value: "@Microsoft.KeyVault(VaultName=retail-engine-kv;SecretName=TextAnalyticsEndpoint)"
+
+    # Azure AI Search (from Key Vault)
+    - name: USE_AZURE_SEARCH
+      value: "true"
+    - name: AZURE_SEARCH_KEY
+      value: "@Microsoft.KeyVault(VaultName=retail-engine-kv;SecretName=SearchKey)"
+    - name: AZURE_SEARCH_ENDPOINT
+      value: "@Microsoft.KeyVault(VaultName=retail-engine-kv;SecretName=SearchEndpoint)"
+    - name: AZURE_SEARCH_INDEX
+      value: retail-policy-index
+
+    # Azure Key Vault
+    - name: USE_AZURE_KEYVAULT
+      value: "true"
+    - name: AZURE_KEYVAULT_URL
+      value: "https://retail-engine-kv.vault.azure.net/"
+
+    # Azure Web App name
+    - name: AZURE_WEBAPP_NAME
+      value: smart-retail-engine
+
+# ── Azure Key Vault ────────────────────────────────────────────
+keyVault:
+  name: retail-engine-kv
+  resourceGroup: rg-retail-engine
+  location: eastus
+  sku: standard
+  secrets:
+    - name: MongoConnection
+      description: Cosmos DB MongoDB connection string
+    - name: AzureOpenAIKey
+      description: Azure OpenAI API key
+    - name: AzureOpenAIEndpoint
+      description: Azure OpenAI endpoint URL
+    - name: TextAnalyticsKey
+      description: Azure Cognitive Services Text Analytics key
+    - name: TextAnalyticsEndpoint
+      description: Azure Cognitive Services endpoint
+    - name: SearchKey
+      description: Azure AI Search admin key
+    - name: SearchEndpoint
+      description: Azure AI Search endpoint URL
+
+# ── Azure Cosmos DB (MongoDB API) ─────────────────────────────
+cosmosDB:
+  accountName: retail-cosmos-db
+  resourceGroup: rg-retail-engine
+  kind: MongoDB
+  apiVersion: "4.2"
+  databaseName: smart_retail
+  collections:
+    - name: retail_records
+      indexes:
+        - keys: [product_id, date]
+        - keys: [store_id]
+        - keys: [category]
+        - keys: [region]
+
+# ── Azure Cognitive Services ───────────────────────────────────
+cognitiveServices:
+  textAnalytics:
+    name: retail-text-analytics
+    kind: TextAnalytics
+    sku: S
+    location: eastus
+
+  aiSearch:
+    name: retail-ai-search
+    sku: basic
+    location: eastus
+    indexes:
+      - name: retail-policy-index
+        fields:
+          - name: id
+            type: Edm.String
+            key: true
+          - name: content
+            type: Edm.String
+            searchable: true
+          - name: source
+            type: Edm.String
+            filterable: true
+
+# ── Azure ML Workspace ─────────────────────────────────────────
+azureML:
+  workspaceName: retail-ml-workspace
+  resourceGroup: rg-retail-engine
+  location: eastus
+  models:
+    - name: retail-demand-rf
+      description: RandomForest demand forecasting model
+      framework: ScikitLearn
+
+# ── CI/CD Pipeline ─────────────────────────────────────────────
+cicd:
+  provider: GitHub Actions
+  workflow: .github/workflows/ci-cd.yml
+  triggers:
+    - push to main branch
+  stages:
+    1_test:
+      - Install dependencies
+      - Generate sample data
+      - Run pytest (65 tests)
+    2_build:
+      - Build Docker image
+      - Push to GitHub Container Registry
+    3_deploy:
+      - Deploy to Azure Web App
+
+# ── Security ───────────────────────────────────────────────────
+security:
+  - All secrets stored in Azure Key Vault
+  - No secrets in source code or environment files
+  - HTTPS only on Azure Web App
+  - Non-root Docker user (appuser)
+  - Input validation via Pydantic models
+  - MongoDB connection timeout with graceful fallback

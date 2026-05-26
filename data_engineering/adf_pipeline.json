@@ -1,0 +1,52 @@
+{
+  "description": "Azure Data Factory Pipeline — Smart Retail Analytics Engine",
+  "comment": "Import this JSON into Azure Data Factory to create the ingestion pipeline",
+  "pipeline": {
+    "name": "RetailDataIngestionPipeline",
+    "description": "Ingest raw retail CSV from HTTP/Blob to Azure Data Lake",
+    "activities": [
+      {
+        "name": "CopyRawRetailData",
+        "type": "Copy",
+        "description": "Copy raw retail CSV to Azure Data Lake raw container",
+        "source": {
+          "type": "DelimitedTextSource",
+          "firstRowAsHeader": true
+        },
+        "sink": {
+          "type": "DelimitedTextSink",
+          "folderPath": "raw/retail/",
+          "fileName": "retail_records.csv"
+        }
+      },
+      {
+        "name": "TriggerDatabricksPipeline",
+        "type": "DatabricksNotebook",
+        "description": "Run RAW to STAGED to CURATED pipeline in Databricks",
+        "dependsOn": ["CopyRawRetailData"],
+        "notebookPath": "/Shared/RetailEngine/retail_pipeline",
+        "parameters": {
+          "raw_path": "abfss://raw@retailstorage.dfs.core.windows.net/retail/",
+          "staged_path": "abfss://staged@retailstorage.dfs.core.windows.net/retail/",
+          "curated_path": "abfss://curated@retailstorage.dfs.core.windows.net/retail/"
+        }
+      },
+      {
+        "name": "NotifyFastAPI",
+        "type": "WebActivity",
+        "description": "Notify FastAPI backend that new data is available",
+        "dependsOn": ["TriggerDatabricksPipeline"],
+        "url": "https://smart-retail-engine.azurewebsites.net/ping",
+        "method": "GET"
+      }
+    ],
+    "triggers": {
+      "DailyIngestionTrigger": {
+        "type": "ScheduleTrigger",
+        "frequency": "Day",
+        "interval": 1,
+        "startTime": "2024-01-01T02:00:00Z"
+      }
+    }
+  }
+}

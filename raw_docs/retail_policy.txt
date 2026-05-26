@@ -1,0 +1,97 @@
+SMART RETAIL ANALYTICS ENGINE — RETAIL POLICY DOCUMENT
+Version 1.0 | Effective: January 2024
+
+=============================================================
+SECTION 1: RETURN AND REFUND POLICY
+=============================================================
+
+Customers may return any product within 30 days of purchase with a valid receipt.
+Items must be in original, unused condition with all original packaging intact.
+Electronics may be returned within 15 days of purchase provided they are unopened.
+Clothing items may be exchanged or returned within 30 days if tags are still attached.
+Groceries and perishable items are non-returnable once purchased.
+Furniture returns are accepted within 7 days of delivery for manufacturing defects only.
+Refunds are processed within 5-7 business days to the original payment method.
+Store credit is issued immediately for returns without a receipt.
+Automotive parts may only be returned if unused and in original packaging within 14 days.
+Health and Beauty products are non-returnable once opened for hygiene reasons.
+
+=============================================================
+SECTION 2: PROMOTIONAL AND DISCOUNT POLICY
+=============================================================
+
+Promotional discounts may not be combined with other offers unless explicitly stated.
+Seasonal promotions are valid only during the advertised promotional period.
+Employee discounts are capped at 20% and apply to full-price items only.
+Clearance items are sold as-is and are not eligible for further discounts.
+Loyalty program members earn 1 point per dollar spent; 100 points equals $1 store credit.
+Flash sale prices are valid for 24 hours only and cannot be price-matched after expiry.
+Discount codes must be applied at checkout and cannot be applied retroactively.
+Bundle discounts apply only when all items in the bundle are purchased together.
+Promotional pricing does not apply to gift cards, warranties, or service fees.
+
+=============================================================
+SECTION 3: INVENTORY AND STOCK MANAGEMENT POLICY
+=============================================================
+
+Minimum stock levels must be maintained for all high-velocity SKUs at all times.
+Reorder points are calculated based on 14-day rolling average sales velocity.
+Stockouts must be reported to the inventory manager within 24 hours of detection.
+Overstock situations exceeding 90 days of supply trigger an automatic markdown review.
+Dead stock (no sales in 180 days) is flagged for liquidation or donation.
+Seasonal inventory must be ordered at least 60 days before the season start date.
+Cross-store transfers are permitted to balance stock levels across regions.
+All inventory adjustments must be logged with a reason code in the system.
+Shrinkage above 2% of total inventory value triggers a mandatory audit.
+
+=============================================================
+SECTION 4: PRICING POLICY
+=============================================================
+
+All prices are set by the central pricing team and must not be altered at store level.
+Price matching is offered for identical products sold by authorized competitors.
+Price changes take effect at the start of the next business day after approval.
+Markdown schedules for seasonal items follow a 10%/20%/30% tiered reduction plan.
+Prices must always reflect applicable taxes and fees in the displayed amount.
+Dynamic pricing adjustments are permitted for perishables within a 15% variance band.
+All pricing data is audited monthly for compliance with regional regulations.
+
+=============================================================
+SECTION 5: STORE OPERATIONS POLICY
+=============================================================
+
+Store opening hours are 8:00 AM to 10:00 PM Monday through Saturday.
+Sunday hours are 10:00 AM to 8:00 PM.
+All cash registers must be reconciled at the end of each shift.
+Customer complaints must be escalated to a supervisor within 10 minutes.
+Loss prevention protocols require bag checks at all store exits.
+Staff must complete mandatory compliance training annually.
+CCTV footage is retained for a minimum of 30 days.
+Emergency evacuation drills are conducted quarterly.
+
+=============================================================
+SECTION 6: REGIONAL SALES GUIDELINES
+=============================================================
+
+North Region: Focus on Electronics and Automotive categories; winter seasonal promotions run October through February.
+South Region: Groceries and Health categories are highest velocity; summer promotions run May through August.
+East Region: Clothing and Beauty are top performers; back-to-school promotions run July through September.
+West Region: Sports and Outdoor categories lead; promotions align with outdoor activity seasons.
+Central Region: Furniture and Books are primary categories; promotions tied to home improvement seasons.
+Northeast Region: Electronics and Clothing dominate; holiday promotions are the highest revenue period.
+Northwest Region: Sports and Groceries are primary; eco-friendly product lines are prioritized.
+Southeast Region: Beauty and Health lead; warm-weather promotions run year-round.
+Southwest Region: Automotive and Sports are top categories; desert climate drives seasonal demand patterns.
+
+=============================================================
+SECTION 7: DATA AND ANALYTICS POLICY
+=============================================================
+
+All sales data must be uploaded to the analytics platform within 24 hours of close of business.
+Customer data is anonymized before any analytics processing.
+Demand forecasts are generated weekly using the RandomForest model.
+Anomaly detection runs daily on the previous day's sales data.
+Model retraining is triggered when R2 score drops below 0.70 on the validation set.
+All model artifacts are versioned and stored in the model vault.
+Access to raw sales data is restricted to authorized analytics personnel.
+Reports generated from the platform may be shared internally but not externally without approval.

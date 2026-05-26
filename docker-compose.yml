@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  retail_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: retail_engine_api
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_CONNECTION=mongodb://mongo:27017
+      - MONGO_DB_NAME=smart_retail
+      - USE_AZURE_OPENAI=false
+      # Uncomment and fill in to enable Azure OpenAI:
+      # - AZURE_OPENAI_KEY=your-key
+      # - AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+      # - AZURE_OPENAI_DEPLOYMENT=gpt-4o
+    volumes:
+      - sales_data:/app/sales_store
+      - model_data:/app/model_vault
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - retail_net
+
+  mongo:
+    image: mongo:7.0
+    container_name: retail_engine_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - retail_net
+
+volumes:
+  sales_data:
+  model_data:
+  mongo_data:
+
+networks:
+  retail_net:
+    driver: bridge

@@ -1,0 +1,21 @@
+ARM Template — Smart Retail Analytics Engine
+Capstone Project Left Shift Program 2026
+
+Save this as arm_template.json and deploy via:
+  az deployment group create --resource-group rg-retail-engine --template-file arm_template.json
+
+Resources created:
+1. Microsoft.Web/serverfarms  — App Service Plan (B2 Linux)
+2. Microsoft.Web/sites        — Web App (Docker container)
+3. Microsoft.KeyVault/vaults  — Key Vault for secrets
+4. Microsoft.DocumentDB       — Cosmos DB (MongoDB API)
+
+Parameters:
+- webAppName:      smart-retail-engine
+- location:        eastus
+- dockerImage:     ghcr.io/YOUR_ORG/retail-engine:latest
+- mongoConnection: (secure string from Key Vault)
+
+Outputs:
+- webAppUrl:   https://smart-retail-engine.azurewebsites.net
+- keyVaultUri: https://kv-smart-retail-engine.vault.azure.net/
