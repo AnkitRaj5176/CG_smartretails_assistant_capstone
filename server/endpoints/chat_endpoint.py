@@ -37,12 +37,6 @@ async def chat_with_assistant(request_body: ChatRequest) -> dict:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@chat_router.get("/api/assistant/actions")
-async def list_available_actions() -> dict:
-    """Return all registered agent actions."""
-    return {"total_actions": len(get_all_actions()), "actions": get_all_actions()}
-
-
 @chat_router.get("/api/metrics/overview")
 async def get_metrics_overview() -> dict:
     """Dashboard KPIs — revenue, units, top products, category, region, monthly trend."""
@@ -56,10 +50,14 @@ async def get_metrics_overview() -> dict:
         return {
             "total_revenue": float(df["revenue"].sum()),
             "total_units_sold": float(df["units_sold"].sum()),
-            "top_products": [{"product_id": k, "revenue": float(v)} for k, v in df.groupby("product_id")["revenue"].sum().sort_values(ascending=False).head(5).items()],
-            "revenue_by_category": {k: float(v) for k, v in df.groupby("category")["revenue"].sum().sort_values(ascending=False).items()},
-            "revenue_by_region": {k: float(v) for k, v in df.groupby("region")["revenue"].sum().sort_values(ascending=False).items()},
-            "monthly_sales_trend": {k: float(v) for k, v in df.groupby("year_month")["revenue"].sum().sort_index().items()},
+            "top_products": [{"product_id": k, "revenue": float(v)} for k, v in
+                df.groupby("product_id")["revenue"].sum().sort_values(ascending=False).head(5).items()],
+            "revenue_by_category": {k: float(v) for k, v in
+                df.groupby("category")["revenue"].sum().sort_values(ascending=False).items()},
+            "revenue_by_region": {k: float(v) for k, v in
+                df.groupby("region")["revenue"].sum().sort_values(ascending=False).items()},
+            "monthly_sales_trend": {k: float(v) for k, v in
+                df.groupby("year_month")["revenue"].sum().sort_index().items()},
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
