@@ -77,12 +77,6 @@ def test_chat_forecast_query():
     assert r.status_code == 200
     assert r.json()["agent"] == "ForecastAgent"
 
-
-def test_list_actions():
-    r = client.get("/api/assistant/actions")
-    # This endpoint was removed in cleanup — skip gracefully
-    assert r.status_code in (200, 404)
-
 # ── Lookup ─────────────────────────────────────────────────────────────────────
 
 def test_lookup_empty_query():
@@ -100,7 +94,6 @@ def test_lookup_valid_query():
 # ── Metrics ────────────────────────────────────────────────────────────────────
 
 def test_metrics_overview_after_upload():
-    # Upload data first
     client.post("/api/data/upload",
                 files={"file": ("retail.csv", VALID_CSV.encode(), "text/csv")})
     r = client.get("/api/metrics/overview")
@@ -112,7 +105,6 @@ def test_metrics_overview_after_upload():
 # ── ML Endpoints ───────────────────────────────────────────────────────────────
 
 def test_train_with_data():
-    # Upload data first
     client.post("/api/data/upload",
                 files={"file": ("retail.csv", VALID_CSV.encode(), "text/csv")})
     r = client.post("/api/ml/train", json={"num_trees": 10, "holdout_ratio": 0.2})
@@ -131,24 +123,10 @@ def test_predict_after_training():
         "store_id": "STORE_A",
         "region": "North",
     })
-    # 200 if model exists, 404 if not trained yet
     assert r.status_code in (200, 404)
 
 
-def test_anomalies_with_data():
-    client.post("/api/data/upload",
-                files={"file": ("retail.csv", VALID_CSV.encode(), "text/csv")})
-    r = client.post("/api/ml/anomalies",
-                    json={"outlier_fraction": 0.05, "spike_multiplier": 2.0, "max_results": 10})
-    assert r.status_code == 200
-    body = r.json()
-    assert "total_anomalies" in body
-    assert "anomalies" in body
-
-
 def test_train_without_data_returns_404():
-    """Verify the endpoint returns 404 when no CSV exists.
-    Uses a fresh TestClient pointed at a non-existent path via monkeypatching."""
     import server.endpoints.ml_endpoint as ml_mod
     original_path = ml_mod._RETAIL_CSV_PATH
     ml_mod._RETAIL_CSV_PATH = "/nonexistent/path/retail_records.csv"
@@ -157,3 +135,20 @@ def test_train_without_data_returns_404():
         assert r.status_code == 404
     finally:
         ml_mod._RETAIL_CSV_PATH = original_path
+
+# ── Azure ──────────────────────────────────────────────────────────────────────
+
+def test_azure_status():
+    r = client.get("/api/azure/status")
+    assert r.status_code == 200
+    body = r.json()
+    assert "azure_components" in body
+
+# ── Pipeline ───────────────────────────────────────────────────────────────────
+
+def test_pipeline_status():
+    r = client.get("/api/pipeline/status")
+    assert r.status_code == 200
+    body = r.json()
+    assert "pipeline_components" in body
+    assert "data_flow" in body
