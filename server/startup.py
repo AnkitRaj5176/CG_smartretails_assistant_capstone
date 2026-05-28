@@ -56,7 +56,10 @@ OPENAPI_TAGS = [
         "description": "Power BI dashboard data endpoints — key metrics, revenue charts, anomaly alerts, ML model performance.",
     },
     {
-        "name": "G. Final Deployment",
+        "name": "F. Analytics & Visualization (Power BI)",
+        "description": "Power BI dashboard data — key metrics, model outputs, anomaly alerts, revenue trends, agent insights.",
+    },
+    {
         "description": "Docker, GitHub Actions CI/CD, Azure Web App deployment configuration and status.",
     },
     {
@@ -111,7 +114,6 @@ retail_application.include_router(azure_router)       # D
 retail_application.include_router(pipeline_router)    # E
 retail_application.include_router(powerbi_router)     # F
 retail_application.include_router(deployment_router)  # G
-
 
 @retail_application.get("/ping", tags=["System"])
 async def health_check() -> dict:
