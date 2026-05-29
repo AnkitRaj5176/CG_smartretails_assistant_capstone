@@ -49,17 +49,14 @@ OPENAPI_TAGS = [
     },
     {
         "name": "E. Data Engineering Pipeline",
-        "description": "Azure Data Factory, Databricks PySpark, Azure Fabric Lakehouse — RAW → STAGED → CURATED data flow with Parquet storage.",
-    },
-    {
-        "name": "F. Analytics & Visualization (Power BI)",
-        "description": "Power BI dashboard data endpoints — key metrics, revenue charts, anomaly alerts, ML model performance.",
+        "description": "Azure Data Factory, Databricks PySpark, Azure Fabric Lakehouse — RAW to STAGED to CURATED data flow with Parquet storage.",
     },
     {
         "name": "F. Analytics & Visualization (Power BI)",
         "description": "Power BI dashboard data — key metrics, model outputs, anomaly alerts, revenue trends, agent insights.",
     },
     {
+        "name": "G. Final Deployment",
         "description": "Docker, GitHub Actions CI/CD, Azure Web App deployment configuration and status.",
     },
     {
